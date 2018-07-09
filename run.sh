@@ -6,10 +6,14 @@ echo "Harvesting Information from paste database..."
 python3 sniff-paste.py
 sleep 2 
 
+cd util
 echo "Getting Unique Emails..."
 source getUniqueEmails.sh
 
-cd util
+echo "Getting Phone Numbers..."
+source getUniquePhones.sh
+
+
 echo "Getting Unique IP addresses..."
 source getUniqueIPs.sh
 
