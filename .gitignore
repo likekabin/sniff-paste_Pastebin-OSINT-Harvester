@@ -8,5 +8,6 @@ configdebug.py
 settings.debug.ini
 
 log/
+__pycache__/
 out/
 

@@ -1,11 +1,13 @@
 echo "Scraping Pastes to database (set max limit in setttings.ini)..."
 python3 scraper.py
-
 sleep 2
-echo "Getting valid IPs from paste database..."
-python3 getPastebinIPs.py
 
+echo "Harvesting Information from paste database..."
+python3 sniff-paste.py
 sleep 2 
+
+echo "Getting Unique Emails..."
+source getUniqueEmails.sh
 
 cd util
 echo "Getting Unique IP addresses..."
@@ -17,7 +19,7 @@ sleep 2
 source getOnlineIPs.sh
 
 
-echo "Getting Nmap Resultss..."
+echo "Getting Nmap Results..."
 sleep 2 
 source getNmapResults.sh
 
@@ -25,3 +27,4 @@ source getNmapResults.sh
 echo "Converting to HTML..."
 sleep 2 
 source generateNmapHTML.sh
+
