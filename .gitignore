@@ -1,4 +1,12 @@
 *.log
 *.db
+*.txt
+*.html
+*.xml
+
+configdebug.py
+settings.debug.ini
+
 log/
-output/
+out/
+

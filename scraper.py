@@ -18,7 +18,7 @@ from colorlog import ColoredFormatter
 
 
 class PasteDBConnector(object):
-    supported = ('MYSQL', 'SQLITE')
+    supported = ('MYSQL')
 
     def __init__(self, db, **kwargs):
         try:
@@ -28,11 +28,6 @@ class PasteDBConnector(object):
             self.logger.error('SQLAlchemy import failed. Make sure the SQLAlchemy Python library '
                               'is installed! To check your existing installation run: '
                               'python3 -c "import sqlalchemy;print(sqlalchemy.__version__)"')
-        if db not in self.supported:
-            msg = 'The specified database %s is not supported. Please chose an engine from %s' % \
-                  (db, ', '.join(self.supported))
-            self.logger.error(msg)
-            raise ValueError(msg)
         self.db = db
         self.Base = declarative_base()
         self.engine = self._get_db_engine(**kwargs)
@@ -55,13 +50,9 @@ class PasteDBConnector(object):
                 table_name=kwargs.pop('table_name'),
                 charset='utf8'
             )
-            self.logger.info('Using MySQL at ' + location)
+            self.logger.info('Using MySQL')
             return create_engine(location)
-        elif self.db == 'SQLITE':
-            location = 'sqlite+pysqlite:///' + kwargs.pop('filename')
-            self.logger.info('Using SQLite at ' + location)
-            return create_engine(location)
-
+        
     def _get_db_session(self, engine):
         from sqlalchemy.orm import sessionmaker
         return sessionmaker(bind=engine)()
@@ -72,9 +63,7 @@ class PasteDBConnector(object):
         from sqlalchemy import Column, Integer, String, DateTime
         if db == 'MYSQL':
             from sqlalchemy.dialects.mysql import LONGTEXT
-        elif db == 'SQLITE':
-            from sqlalchemy import UnicodeText
-
+       
         class Paste(base):
             __tablename__ = kwargs.pop('table_name')
 
@@ -85,9 +74,7 @@ class PasteDBConnector(object):
             date = Column('date', DateTime())
             if db == 'MYSQL':
                 data = Column('data', LONGTEXT(charset='utf8'))
-            else:
-                data = Column('data', UnicodeText())
-
+      
             def __repr__(self):
                 return "<Paste(id=%s, name='%s', lang='%s', link='%s', date='%s', data='%s')" %\
                        (self.id,
@@ -127,8 +114,6 @@ class PastebinScraper(object):
         self.conf_logging = self.config['LOGGING']
         self.conf_stdout = self.config['STDOUT']
         self.conf_mysql = self.config['MYSQL']
-        self.conf_sqlite = self.config['SQLITE']
-        self.conf_file = self.config['FILE']
 
         # Internals
         self.unlimited_pastes = self.conf_general.getint('PasteLimit') == 0
@@ -158,16 +143,11 @@ class PastebinScraper(object):
         console.setFormatter(formatter)
         self.logger.addHandler(console)
 
-        if not (self.conf_stdout.getboolean('Enable') or self.conf_mysql.getboolean('Enable')
-                or self.conf_sqlite.getboolean('Enable') or self.conf_file.getboolean('Enable')):
+        if not (self.conf_stdout.getboolean('Enable') or self.conf_mysql.getboolean('Enable')):
             self.logger.error('No output method specified! Please set at least one output method '
                               'in the settings.ini to \'yes\'.')
             raise RuntimeError('No output method specified!')
 
-        # Create File output folder if needed
-        if not path.exists('output') and self.conf_file.getboolean('Enable'):
-            self.logger.debug('Creating new output directory')
-            os.mkdir('output')
 
         # DB connectors if needed
         self.mysql_conn = None
@@ -182,14 +162,7 @@ class PastebinScraper(object):
                 password=self.conf_mysql['Password'],
                 table_name=self.conf_mysql['TableName']
             )
-        if self.conf_sqlite.getboolean('Enable'):
-            self.logger.debug('Initializing SQLite connector')
-            self.sqlite_conn = PasteDBConnector(
-                db='SQLITE',
-                filename=self.conf_sqlite['Filename'],
-                table_name=self.conf_sqlite['TableName']
-            )
-
+     
     def _get_paste_data(self):
         paste_limit = self.conf_general.getint('PasteLimit')
         pb_link = self.conf_general['PBLINK']
@@ -250,10 +223,6 @@ class PastebinScraper(object):
                 self._write_to_stdout(paste, data)
             if self.conf_mysql.getboolean('Enable'):
                 self._write_to_mysql(paste, data)
-            if self.conf_file.getboolean('Enable'):
-                self._write_to_file(paste, data)
-            if self.conf_sqlite.getboolean('Enable'):
-                self._write_to_sqlite(paste, data)
 
     def _handle_data_download(self, link):
         while True:
@@ -297,15 +266,6 @@ class PastebinScraper(object):
     def _write_to_mysql(self, paste, data):
         self.mysql_conn.add(paste, data)
 
-    def _write_to_sqlite(self, paste, data):
-        self.sqlite_conn.add(paste, data)
-
-    def _write_to_file(self, paste, data):
-        # Date and paste ID
-        fname = '%s_%s.txt' % (datetime.now().strftime('%Y-%m-%d.%H-%M-%S'), paste[2])
-        with open(path.join('output', fname), 'w') as f:
-            output = self._assemble_output(self.conf_file, paste, data)
-            f.write(output)
 
     def run(self):
         for i in range(self.conf_general.getint('DownloadWorkers')):
