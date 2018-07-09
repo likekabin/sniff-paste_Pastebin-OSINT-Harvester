@@ -16,6 +16,7 @@ import configparser
 import queue
 from colorlog import ColoredFormatter
 
+debug = False
 
 class PasteDBConnector(object):
     supported = ('MYSQL')
@@ -109,7 +110,10 @@ class PastebinScraper(object):
     def __init__(self):
         # Read and split config
         self.config = configparser.ConfigParser()
-        self.config.read('settings.ini')
+        if(debug):
+            self.config.read('settings.debug.ini')
+        else:
+            self.config.read('settings.ini')
         self.conf_general = self.config['GENERAL']
         self.conf_logging = self.config['LOGGING']
         self.conf_stdout = self.config['STDOUT']
