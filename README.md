@@ -6,5 +6,15 @@ Use run.sh  to go through the entire process of collection, logging, and harvest
 
 There are various tools for handling the harvested lists in the util folder.
 
-Forked from (dmuhs/pastebin-scraper)[https://github.com/dmuhs/pastebin-scraper/]
+## Installation
 
+`sudo apt install 'nmap fping'`
+
+`pip3 install -r requirements.txt`
+
+ - Create database pastes in mysql server
+ - Fill in config.py and settings.ini
+
+`./run.sh`
+
+This will scrape pastebin for the latest number of pastes, then run analysis for ip addresses, emails, and phone numbers. It filters out duplicates and runs scans on some of the harvested data.
