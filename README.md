@@ -1,4 +1,9 @@
-## OSINT Pastebin Harvester
+## Sniff-Paste: OSINT Pastebin Harvester
+
+<p align="center">
+    <img src="res/sniff-paste-pic.png"></img>
+    <br>
+</p>
 
 Multithreaded pastebin scraper, scrapes to mysql database. Settings for the scraper itself are in settings.ini, while settings for the harvesters are in config.py
 
