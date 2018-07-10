@@ -18,13 +18,13 @@ conn = pymysql.connect(conf_mysql['Host'],conf_mysql['Username'], conf_mysql['Pa
 
 cur = conn.cursor() # get a cursor
 
-results = cur.execute('select data from pastes;')
-
 urlLog= open('out/pastebin-urls.txt','w')
 emailLog = open('out/pastebin-emails.txt','w')
 phoneLog = open('out/pastebin-phone-numbers.txt','w')
 ipLog = open('out/pastebin-ips.txt','w')
 
+
+results = cur.execute('select data, link  from pastes;')
 for row in cur.fetchall():
     ips = re.findall(r'[0-9]+(?:\.[0-9]+){3}',str( row) )
     emails = re.findall(r"[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+",str( row) )
@@ -34,18 +34,12 @@ for row in cur.fetchall():
 
     urls += re.findall('http?://(?:[-\w.]|(?:%[\da-fA-F]{2}))+', str(row))
 
-    try:
-
-        emailLog.write(email+"\n")
-        print(email)
-    except:
-        print("Invalid Email")
-
+    print("Pastebin link: https://pastebin.com/" +row[1])
 
     for url in urls:
         try:
             urlLog.write(url+"\n")
-            print("Website: "+url)
+            print("\tWebsite: "+url)
         except:
             print("Invalid Website")
 
@@ -55,7 +49,7 @@ for row in cur.fetchall():
        # if(response == 0):
         try:
             emailLog.write(email+"\n")
-            print(email)
+            print("\tEmail: "+email)
         except:
             print("Invalid Email")
 
@@ -63,7 +57,7 @@ for row in cur.fetchall():
         try:
             if( ' ' in number or '-' in number or '(' in number or ')' in number):
                 phoneLog.write(number+"\n")
-                print("Phone: "+number) 
+                print("\tPhone: "+number) 
         except:
             print("Invalid Phone Number: "+str(e))
 
@@ -71,9 +65,21 @@ for row in cur.fetchall():
         try:
             socket.inet_aton(ip)
             ipLog.write(ip+"\n")
-            print("IP: "+ip)
+            print("\tIP: "+ip)
         except:
-            print("Invalid IP")
+            print("\tInvalid IP")
+
+
+    if(len(emails)>0): print("Emails Scraped: "+str(len(emails)))
+    if(len(ips)>0): print("IPs Scraped: "+str(len(ips)))
+    if(len(urls)>0): print("Urls Scraped: "+str(len(urls)))
+    if(len(phoneNumbers)>0): print("Phone Numbers Scraped: "+str(len(phoneNumbers)))
+
+
+    emails = None
+    ips = None
+    phoneNumbers = None
+    urls= None
      
 emailLog.close()
 phoneLog.close()
