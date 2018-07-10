@@ -1,15 +1,20 @@
 import pymysql
 import socket
 import re
+import configparser
 
 debug=False
 
-if (debug):
-    import configdebug as config
-else:
-    import config
 
-conn = pymysql.connect(config.config["db-ip"],config.config['db-user'], config.config['db-pass'],config.config['db'])
+config = configparser.ConfigParser()
+if(debug):
+    config.read('settings.debug.ini')
+else:
+    config.read('settings.ini')
+     
+conf_mysql = config['MYSQL']
+
+conn = pymysql.connect(conf_mysql['Host'],conf_mysql['Username'], conf_mysql['Password'],conf_mysql['TableName'])
 
 cur = conn.cursor() # get a cursor
 

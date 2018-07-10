@@ -4,9 +4,9 @@
     <img src="res/sniff-paste-pic.jpg" width="400"></img>
 </p>
 
-Multithreaded pastebin scraper, scrapes to mysql database. Settings for the scraper itself are in settings.ini, while settings for the harvesters are in config.py
+Multithreaded pastebin scraper, scrapes to mysql database, then reads pastes for noteworthy information.
 
-Use run.sh  to go through the entire process of collection, logging, and harvest automatically. The scraper can be set to a paste limit of 0 to scrape indefinitely. 
+Use run.sh  to go through the entire process of collection, logging, and harvest automatically. The scraper can be set to a paste limit of 0 to scrape indefinitely. If scraped indefinitely, press ctrl + c to stop scraping and start analysis. 
 
 There are various tools for handling the harvested lists in the util folder.
 
