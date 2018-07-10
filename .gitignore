@@ -1,7 +1,7 @@
 *.log
 *.db
+log/*
 !log/README.md
-log/*.txt
 out/*.txt
 *.html
 *.xml
