@@ -1,5 +1,6 @@
 *.log
 *.db
+!log/README.md
 log/*.txt
 out/*.txt
 *.html
