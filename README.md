@@ -17,7 +17,7 @@ There are various tools for handling the harvested lists in the util folder.
 `pip3 install -r requirements.txt`
 
  - Create database named pastes in mysql server
- - Fill in config.py and settings.ini
+ - Fill in settings.ini
 
 `./run.sh`
 
