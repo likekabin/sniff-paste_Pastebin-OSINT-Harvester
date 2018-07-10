@@ -1,6 +1,7 @@
 *.log
 *.db
-*.txt
+log/*.txt
+out/*.txt
 *.html
 *.xml
 
