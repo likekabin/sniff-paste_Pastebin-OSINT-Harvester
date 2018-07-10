@@ -10,6 +10,9 @@ cd util
 echo "Getting Unique Emails..."
 source getUniqueEmails.sh
 
+echo "Getting Unique URLs..."
+source getUniqueURLs.sh
+
 echo "Getting Phone Numbers..."
 source getUniquePhones.sh
 
