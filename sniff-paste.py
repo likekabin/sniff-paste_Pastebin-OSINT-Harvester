@@ -2,7 +2,7 @@ import pymysql
 import socket
 import re
 
-debug=True
+debug=False
 
 if (debug):
     import configdebug as config

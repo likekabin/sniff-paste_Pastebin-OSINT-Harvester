@@ -12,7 +12,7 @@ There are various tools for handling the harvested lists in the util folder.
 
 ## Installation
 
-`sudo apt install libxslt-dev nmap xsltproc fping mysql-server`
+`sudo apt install libxslt-dev python3-lxml nmap xsltproc fping mysql-server`
 
 `pip3 install -r requirements.txt`
 
