@@ -1,1 +1,1 @@
-awk '!seen[$0]++' ../out/pastebin-urls.txt >> ../out/unique-pastebin-urls.txt
+sort ../out/pastebin-urls.txt | uniq > ../out/unique-pastebin-urls.txt

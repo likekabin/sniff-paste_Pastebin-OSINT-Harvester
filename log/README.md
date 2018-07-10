@@ -1,1 +1,1 @@
-Scraper Logs will be put here
+Scraper logs located here

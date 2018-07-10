@@ -1,1 +1,1 @@
-awk '!seen[$0]++' ../out/pastebin-phone-numbers.txt >> ../out/unique-phone-numbers.txt
+sort ../out/pastebin-phone-numbers.txt | uniq > ../out/unique-pastebin-phone-numbers.txt

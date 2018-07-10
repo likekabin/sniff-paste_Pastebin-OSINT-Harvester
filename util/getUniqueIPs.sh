@@ -1,1 +1,1 @@
-awk '!seen[$0]++' ../out/pastebin-ips.txt >> ../out/unique-pastebin-ips.txt
+sort ../out/pastebin-ips.txt | uniq > ../out/unique-pastebin-ips.txt
