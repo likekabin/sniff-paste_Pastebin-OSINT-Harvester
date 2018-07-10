@@ -12,11 +12,11 @@ There are various tools for handling the harvested lists in the util folder.
 
 ## Installation
 
-`sudo apt install 'nmap fping'`
+`sudo apt install nmap xsltproc fping mysql-server`
 
 `pip3 install -r requirements.txt`
 
- - Create database pastes in mysql server
+ - Create database named pastes in mysql server
  - Fill in config.py and settings.ini
 
 `./run.sh`
