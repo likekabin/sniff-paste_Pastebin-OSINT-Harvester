@@ -256,8 +256,8 @@ class PasteDBConnector(object):
                     self.session.commit()        
                 else:
                     print("Invalid Phone Number: ")
-             except:
-                   print("Error: Phone number submission")  
+            except:
+               print("Error: Phone number submission")  
 
         totalSecrets= 0 
         for key, value in secretRegexes.items():
