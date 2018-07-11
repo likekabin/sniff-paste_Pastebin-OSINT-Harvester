@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-
 import logging
 import logging.handlers
 import os
@@ -9,7 +8,6 @@ import threading
 import time
 from datetime import datetime
 from os import path
-
 import re
 import requests
 from lxml import html
@@ -18,11 +16,11 @@ import configparser
 import queue
 from colorlog import ColoredFormatter
 
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.dialects.mysql import LONGTEXT
 
 
-debug = True
+debug = False
 
 secretRegexes = {
     "Slack Token": "(xox[p|b|o|a]-[0-9]{12}-[0-9]{12}-[0-9]{12}-[a-z0-9]{32})",
@@ -92,7 +90,7 @@ class PasteDBConnector(object):
 
     def _get_paste_model(self, base, **kwargs):
         class Paste(base):
-            __tablename__ = kwargs.pop('table_name')
+            __tablename__ = "pastes"
 
             id = Column(Integer, primary_key=True)
             name = Column('name', String(60))
@@ -179,12 +177,13 @@ class PasteDBConnector(object):
 
             id = Column(Integer, primary_key=True)
             ip = Column('ip', String(60))
+            online = Column('online', Boolean())      
             link = Column('link', String(28))  # Assuming format http://pastebin.com/XXXXXXXX
-      
             def __repr__(self):
-                return "<IP(id=%s, ip='%s', link='%s')" %\
+                return "<IP(id=%s, ip='%s', online='%s', link='%s')" %\
                        (self.id,
                         self.ip,
+                        self.online,
                         self.link)
         return IP
 
@@ -219,13 +218,21 @@ class PasteDBConnector(object):
             #ADD TO SQL +=url_model
  
         for finding in ips:
-            ip_model = self.ip_model(
-                ip=finding,
-                link=pasteLink
-            )
-            self.session.add(ip_model)
-            self.session.commit()
-            #ADD TO SQL: ip_model
+            try:
+
+                #print("IP: "+finding)
+                #socket.inet_aton(finding)
+                #ret = os.system("ping -o -c 2 -W 500 "+finding)
+                #pingRes = ret != 0 
+                ip_model = self.ip_model(
+                    ip=finding,
+                    online= True,
+                    link=pasteLink
+                )
+                self.session.add(ip_model)
+                self.session.commit()
+            except:
+                print("Invalid IP")
  
         for finding in emails:
             email_model = self.email_model(
