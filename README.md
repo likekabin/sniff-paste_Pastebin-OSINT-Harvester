@@ -30,4 +30,4 @@ This will scrape pastebin for the latest number of pastes, then run analysis for
 	- `links` -- stores urls with extension to paste
 	- `ip` -- stores ip with connectivity and extension to paste
 	- `phones` -- stores phone unmbers with extension to paste
-	- `secrets -- stores secret type with extension to paste
+	- `secrets` -- stores secret type with extension to paste
