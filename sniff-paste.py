@@ -246,7 +246,7 @@ class PasteDBConnector(object):
 
         for finding in phoneNumbers:
             try:
-                if( ' ' in number or '-' in number or '(' in number or ')' in number):
+                if( ' ' in finding or '-' in finding or '(' in finding or ')' in finding):
                     phoneLog.write(number+"\n")
                     phone_model = self.phone_model(
                         phone=finding,
