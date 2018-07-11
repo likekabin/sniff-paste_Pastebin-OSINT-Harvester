@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import logging
+import socket
 import logging.handlers
 import os
 import sys
@@ -113,7 +114,6 @@ class PasteDBConnector(object):
     def _get_email_model(self, base):
         class Email(base):
             __tablename__ = "emails"
-
             id = Column(Integer, primary_key=True)
             email = Column('email', String(60))
             link = Column('link', String(28))  # Assuming format http://pastebin.com/XXXXXXXX
@@ -218,12 +218,14 @@ class PasteDBConnector(object):
             #ADD TO SQL +=url_model
  
         for finding in ips:
+            #print("IP: "+finding)
             try:
-
-                #print("IP: "+finding)
-                #socket.inet_aton(finding)
+                socket.inet_aton(finding)
+            except socket.error:
+                    print("Invalid ip: "+finding)
                 #ret = os.system("ping -o -c 2 -W 500 "+finding)
                 #pingRes = ret != 0 
+            try:
                 ip_model = self.ip_model(
                     ip=finding,
                     online= True,
