@@ -21,7 +21,7 @@ from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.dialects.mysql import LONGTEXT
 
 
-debug = False
+debug = True
 
 secretRegexes = {
     "Slack Token": "(xox[p|b|o|a]-[0-9]{12}-[0-9]{12}-[0-9]{12}-[a-z0-9]{32})",
