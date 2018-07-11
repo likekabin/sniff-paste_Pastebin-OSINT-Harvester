@@ -245,13 +245,20 @@ class PasteDBConnector(object):
             self.session.commit()           
 
         for finding in phoneNumbers:
-            phone_model = self.phone_model(
-                phone=finding,
-                link=pasteLink
-            )
-            self.session.add(phone_model)
-            self.session.commit()        
-        
+            try:
+                if( ' ' in number or '-' in number or '(' in number or ')' in number):
+                    phoneLog.write(number+"\n")
+                    phone_model = self.phone_model(
+                        phone=finding,
+                        link=pasteLink
+                    )
+                    self.session.add(phone_model)
+                    self.session.commit()        
+                else:
+                    print("Invalid Phone Number: ")
+             except:
+                   print("Error: Phone number submission")  
+
         totalSecrets= 0 
         for key, value in secretRegexes.items():
             secrets = re.findall(value, str(data))
