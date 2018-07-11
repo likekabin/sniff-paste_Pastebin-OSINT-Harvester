@@ -115,7 +115,7 @@ class PasteDBConnector(object):
         class Email(base):
             __tablename__ = "emails"
             id = Column(Integer, primary_key=True)
-            email = Column('email', String(60))
+            email = Column('email', String(90))
             link = Column('link', String(28))  # Assuming format http://pastebin.com/XXXXXXXX
       
             def __repr__(self):
