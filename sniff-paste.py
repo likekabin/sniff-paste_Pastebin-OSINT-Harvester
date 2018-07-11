@@ -249,11 +249,13 @@ class PasteDBConnector(object):
             )
             self.session.add(phone_model)
             self.session.commit()        
-             
+        
+        totalSecrets= 0 
         for key, value in secretRegexes.items():
             secrets = re.findall(value, str(data))
-
+            
             for secret in secrets:
+                totalSecrets+=1
                 print("\t"+key+": "+secret)
                 secret_model = self.secret_model(
                     secret=key,
@@ -267,7 +269,7 @@ class PasteDBConnector(object):
         print("Emails: "+str(len(emails)))
         print("URLS: "+str(len(urls)))
         print("Phones: "+str(len(phoneNumbers)))
-        print("Secrets: "+str(len(secrets)))
+        print("Secrets: "+str(totalSecrets))
         print("\n\n")
 
     def add(self, paste, data):
