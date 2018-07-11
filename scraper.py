@@ -16,7 +16,7 @@ import configparser
 import queue
 from colorlog import ColoredFormatter
 
-debug = True
+debug = False
 
 class PasteDBConnector(object):
     supported = ('MYSQL')

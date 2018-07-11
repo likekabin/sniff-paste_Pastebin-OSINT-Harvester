@@ -3,7 +3,7 @@ import socket
 import re
 import configparser
 
-debug=True
+debug=False
 
 
 config = configparser.ConfigParser()
