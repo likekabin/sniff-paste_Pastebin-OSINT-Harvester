@@ -6,9 +6,8 @@
 
 Multithreaded pastebin scraper, scrapes to mysql database, then reads pastes for noteworthy information.
 
-Use run.sh  to go through the entire process of collection, logging, and harvest automatically. The scraper can be set to a paste limit of 0 to scrape indefinitely. If scraped indefinitely, press ctrl + c to stop scraping and start analysis. 
+Use sniff-paste.py  to go through the entire process of collection, logging, and harvest automatically. The scraper can be set to a paste limit of 0 to scrape indefinitely. If scraped indefinitely, press ctrl + c to stop scraping, any useful information will be in the database, along with a link back to the original paste it was found in.
 
-There are various tools for handling the harvested lists in the util folder.
 
 ## Installation
 
@@ -16,9 +15,9 @@ There are various tools for handling the harvested lists in the util folder.
 
 `pip3 install -r requirements.txt`
 
- - Create database named pastes in mysql server
+ - Create database named `sniff_paste` in mysql server
  - Fill in settings.ini
 
-`./run.sh`
+`python3 sniff-paste.py`
 
 This will scrape pastebin for the latest number of pastes, then run analysis for ip addresses, emails, and phone numbers. It filters out duplicates and runs scans on some of the harvested data.
