@@ -28,6 +28,7 @@ debug = False
 
 IPStack = []
 
+nmapFilter= ["127.0.0.1","192.168.1.1","192.168.0.1","0.0.0.0","255.255.255.255","10.0.0.1","10.0.0.0",'192.168.1.256']
 secretRegexes = {
     "Slack Token": "(xox[p|b|o|a]-[0-9]{12}-[0-9]{12}-[0-9]{12}-[a-z0-9]{32})",
     "RSA private key": "-----BEGIN RSA PRIVATE KEY-----",
@@ -70,11 +71,11 @@ class PasteDBConnector(object):
         self.port_model = self._get_port_model(self.Base)
         self.Base.metadata.create_all(self.engine)
 
-        #Nmap Workers
-        for i in range(4):
-            t = threading.Thread(target=self._scan_network)
-            t.setDaemon(True)
-            t.start()
+        #Nmap Worker
+            
+        nmapper = threading.Thread(target=self._scan_network)
+        nmapper.setDaemon(True)
+        nmapper.start()
 
     def _get_db_engine(self, **kwargs):
         from sqlalchemy import create_engine
@@ -350,75 +351,106 @@ class PasteDBConnector(object):
             if(IPStack): #Check for connectivity, parse nmap if valid
 
                 finding, pasteLink = IPStack.pop()
+                
                 print("NMAP WORKER CALLED ["+finding+"]")
                 print("Left on stack: " +str(len(IPStack)))
-                self.logger.debug('Nmap scan on IP: ' + finding)
-                nm.scan(finding, arguments='-sV')
+                if(finding not in nmapFilter):
 
-                print("Nmap Scan ["+finding+"] Complete")
-                try:
-                    state= nm[finding]['status']['state']
-                except:
-                    state= "down"
+                    self.logger.debug('Nmap scan on IP: ' + finding)
+                    nm.scan(finding, arguments='-sV')
 
-                if("up" in state ):
-                    portScan= nm[finding]['tcp']
+                    print("Nmap Scan ["+finding+"] Complete")
+                    try:
+                        state= nm[finding]['status']['state']
+                    except:
+                        state= "down"
 
-                    self.logger.debug(finding+": up\tports: "+str(portScan))
-                    
-                    for key, value in portScan.items():
-                        print(finding+":"+str(key))
-                        product= value['product']
-                        ver= value['version']
-                        state= value['state']
-                        name= value['name']
+                    if("up" in state):
+                        portScan= nm[finding]['tcp']
+
+                        self.logger.debug(finding+": up\tports: "+str(portScan))
+                
+                        for key, value in portScan.items():
+                            print(finding+":"+str(key))
+
+                            product= value['product']
+                            ver= value['version']
+                            state= value['state']
+                            name= value['name']
+
+                            try:
+                 
+                                print("Name: "+name+"\n\tProduct: "+product+"\n\tVersion: "+ver+"\n\tState: "+state)
+
+                                port_model = self.port_model(
+                                    ip = finding,
+                                    port = key,
+                                    service = product,
+                                    status = state,
+                                    version = ver
+                                )
+
+                                try:
+                                    self.session.add(port_model)
+                                    self.session.commit()
+                                except:
+                                    self.session.rollback()
+                                    print("Error: Port Commit Issue, session rollback")
+                            except Exception as e:
+                                print("Exception error while pushing port model: "+str(e))
+
+                            try:
+                                ip_model = self.ip_model(
+                                ip=finding,
+                                online= True,
+                                link=pasteLink
+                                )
+                                try:
+                                    self.session.add(ip_model)
+                                    self.session.commit()
+                                except:
+                                    self.session.rollback()
+                                    print("Error pushing to mysql: "+ str(e))
+                            except:
+                                print("Error: IP Model issue")
+
+                    else: #Else put a normal entry in for pastebin
+                        self.logger.debug("IP["+finding+"] down")
                         try:
-                         
-                            print("Name: "+name+"\n\tProduct: "+product+"\n\tVersion: "+ver+"\n\tState: "+state)
-                            port_model = self.port_model(
-                                ip = finding,
-                                port = key,
-                                service = product,
-                                status = state,
-                                version = ver,
+                            ip_model = self.ip_model(
+                                ip=finding,
+                                online= False,
+                                link=pasteLink
                             )
                             try:
-                                self.session.add(port_model)
+                                self.session.add(ip_model)
                                 self.session.commit()
                             except:
                                 self.session.rollback()
-                                print("Error: Port Commit Issue, session rollback")
+                                print("Error: IP Commit Issue, session rollback")
+
                         except Exception as e:
-                            print("Exception error while pushing port model: "+str(e))
+                            print("Error pushing to mysql: "+ str(e))                    
 
-                    try:
-                        ip_model = self.ip_model(
-                            ip=finding,
-                            online= True,
-                            link=pasteLink
-                         )
-                       # self.session.add(ip_model)
-                       # self.session.commit()
-                    except Exception as e:
-                        print("Error pushing to mysql: "+ str(e))
+        else: #Else put a nmap filtered kentry for pastebin
+            self.logger.debug("IP["+finding+"] is a filtered address")
+            try:
+                ip_model = self.ip_model(
+                    ip=finding,
+                    online= False,
+                    link=pasteLink
+                )
+                try:
+                    self.session.add(ip_model)
+                    self.session.commit()
+                except:
+                    self.session.rollback()
+                    print("Error: IP Commit Issue, session rollback")
 
-                else: #Else put a normal entry in for pastebin
-                     self.logger.debug("IP["+finding+"] down")
-                     try:
-                        ip_model = self.ip_model(
-                            ip=finding,
-                            online= False,
-                            link=pasteLink
-                         )
-                        try:
-                            self.session.add(ip_model)
-                            self.session.commit()
-                        except:
-                            self.session.rollback()
-                            print("Error: IP Commit Issue, session rollback")
+            except Exception as e:
+                print("Error pushing to mysql: "+ str(e))                    
 
-                     except Exception as e:
-                        print("Error pushing to mysql: "+ str(e))                    
+
 
 class PastebinScraper(object):
     def __init__(self):

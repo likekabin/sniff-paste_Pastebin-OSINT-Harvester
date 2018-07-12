@@ -35,4 +35,5 @@ This will scrape pastebin for the latest number of pastes, then run analysis for
 
 **Note**
 
+- Please contribute! If there's an error let me know -- even better if you can fix it :)
 - Please don't use this project maliciously, it is meant to be an analysis tool
