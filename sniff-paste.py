@@ -24,7 +24,7 @@ from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.dialects.mysql import LONGTEXT
 
 
-debug = True
+debug = False
 
 IPStack = []
 
