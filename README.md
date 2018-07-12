@@ -30,7 +30,7 @@ This will scrape pastebin for the latest number of pastes, then run analysis for
 	- `ip` -- stores ip with connectivity and extension to paste
 	- `phones` -- stores phone unmbers with extension to paste
 	- `secrets` -- stores secret type with extension to paste
-        - `ports` -- stores port scan info (port, status, service, version, ip)
+	- `ports` -- stores port scan info (port, status, service, version, ip)
 
 
 **Note**
