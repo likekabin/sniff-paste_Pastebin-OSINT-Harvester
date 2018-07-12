@@ -1,0 +1,9 @@
+sql-statements= {
+    "Top 10 IP Occurences in Pastes":"SELECT ip, COUNT(*) AS magnitude from ips Group By ip Order by magnitude DESC Limit 10",
+    "Top 10 Email Occurences in Pastes":"SELECT email, COUNT(*) AS magnitude from emails Group By phone Order by magnitude DESC Limit 10",
+    "Top 10 Phone Number Occurences in Pastes":"SELECT phone, COUNT(*) AS magnitude from phones Group By phone Order by magnitude DESC Limit 10",
+    "Top 10 URL Occurences in Pastes":"SELECT url, COUNT(*) AS magnitude from links Group By url Order by magnitude DESC Limit 10",
+    "Top 10 Pastes with Highest IP Counts":"SELECT link, COUNT(link) AS frequency FROM ips GROUP BY link ORDER by frequency DESC Limit 10",
+    "Top 10 Pastes with Highest Email Counts":"SELECT link, COUNT(link) AS frequency FROM emails GROUP BY link ORDER by frequency DESC Limit 10",
+    "Top 10 Pastes with Highest URL Counts":"SELECT link, COUNT(link) AS frequency FROM links GROUP BY link ORDER by frequency DESC Limit 10"
+}
