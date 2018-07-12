@@ -11,7 +11,7 @@ Use sniff-paste.py  to go through the entire process of collection, logging, and
 
 ## Installation
 
-`sudo apt install libxslt-dev python3-lxml nmap xsltproc fping mysql-server`
+`sudo apt install libxslt-dev python3-lxml python3-nmap xsltproc mysql-server`
 
 `pip3 install -r requirements.txt`
 

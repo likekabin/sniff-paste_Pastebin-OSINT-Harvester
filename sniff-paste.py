@@ -13,6 +13,8 @@ import re
 import requests
 from lxml import html
 
+import nmap
+
 import configparser
 import queue
 from colorlog import ColoredFormatter
@@ -21,8 +23,10 @@ from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.dialects.mysql import LONGTEXT
 
 
-debug = False
+debug = True
 
+IPStack = [ ("103.113.92.69",'wxlmno0p'), ("206.190.147.205",'wc3ss3')]
+nm = nmap.PortScanner()
 secretRegexes = {
     "Slack Token": "(xox[p|b|o|a]-[0-9]{12}-[0-9]{12}-[0-9]{12}-[a-z0-9]{32})",
     "RSA private key": "-----BEGIN RSA PRIVATE KEY-----",
@@ -64,6 +68,12 @@ class PasteDBConnector(object):
         self.secret_model = self._get_secret_model(self.Base)
 
         self.Base.metadata.create_all(self.engine)
+
+        #Nmap Workers
+        for i in range(5):
+            t = threading.Thread(target=self._scan_network)
+            t.setDaemon(True)
+            t.start()
 
     def _get_db_engine(self, **kwargs):
         from sqlalchemy import create_engine
@@ -221,21 +231,12 @@ class PasteDBConnector(object):
             #print("IP: "+finding)
             try:
                 socket.inet_aton(finding)
+                IPStack.append((finding, pasteLink))
             except socket.error:
-                    print("Invalid ip: "+finding)
+                print("Invalid ip: "+finding)
                 #ret = os.system("ping -o -c 2 -W 500 "+finding)
                 #pingRes = ret != 0 
-            try:
-                ip_model = self.ip_model(
-                    ip=finding,
-                    online= True,
-                    link=pasteLink
-                )
-                self.session.add(ip_model)
-                self.session.commit()
-            except:
-                print("Invalid IP")
- 
+
         for finding in emails:
             email_model = self.email_model(
                 email=finding,
@@ -302,6 +303,26 @@ class PasteDBConnector(object):
                 (self.db, sys.exc_info()[0])
             )
 
+    def _scan_network(self):
+        while True:
+            if(IPStack):
+                finding, pasteLink = IPStack.pop()
+                print("NMAP WORKER CALLED")
+                self.logger.debug('Nmap scan on IP: ' + finding)
+                print('Nmap scan on IP: ' + finding)
+                scan= nm.scan(finding, arguments='-sV')
+                print("Scan Complete")
+                try:
+                    ip_model = self.ip_model(
+                        ip=finding,
+                        online= True,
+                        link=pasteLink
+                     )
+                    self.session.add(ip_model)
+                    self.session.commit()
+                except Exception as e:
+                    print("Error pushing to mysql: "+ str(e))
+ 
 
 class PastebinScraper(object):
     def __init__(self):
@@ -408,6 +429,8 @@ class PastebinScraper(object):
                     if paste_counter % 100 == 0:
                         self.logger.info('Scheduled %d pastes' % paste_counter)
 
+
+
     def _download_paste(self):
         while True:
             paste = self.pastes.get()  # (name, lang, href)
@@ -473,6 +496,8 @@ class PastebinScraper(object):
             t = threading.Thread(target=self._download_paste)
             t.setDaemon(True)
             t.start()
+        
+
         s = threading.Thread(target=self._get_paste_data)
         s.start()
         s.join()
