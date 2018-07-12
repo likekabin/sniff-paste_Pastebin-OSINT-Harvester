@@ -45,6 +45,15 @@ secretRegexes = {
     "Generic Secret": "[s|S][e|E][c|C][r|R][e|E][t|T].*['|\"][0-9a-zA-Z]{32,45}['|\"]"
 }
 
+cryptoRegexes={
+    "bitcoin-address" : "[13][a-km-zA-HJ-NP-Z1-9]{25,34}" ,
+    "bitcoin-uri" : "bitcoin:([13][a-km-zA-HJ-NP-Z1-9]{25,34})" ,
+    "bitcoin-xpub-key" : "(xpub[a-km-zA-HJ-NP-Z1-9]{100,108})(\\?c=\\d*&h=bip\\d{2,3})?" ,
+    "testnet-address" : "[mn2][a-km-zA-HJ-NP-Z1-9]{25,34}" ,
+    "testnet-tpub-key": "(tpub[a-km-zA-HJ-NP-Z1-9]{100,108})(\\?c=\\d*&h=bip\\d{2,3})?" ,
+    "testnet-uri" : "bitcoin:([mn2][a-km-zA-HJ-NP-Z1-9]{25,34})"
+}
+
 class PasteDBConnector(object):
     supported = ('MYSQL')
 
@@ -68,6 +77,7 @@ class PasteDBConnector(object):
         self.ip_model = self._get_ip_model(self.Base)
         self.phone_model = self._get_phone_model(self.Base)
         self.secret_model = self._get_secret_model(self.Base)
+        self.crypto_model = self._get_crypto_model(self.Base)
         self.port_model = self._get_port_model(self.Base)
         self.Base.metadata.create_all(self.engine)
 
@@ -181,6 +191,25 @@ class PasteDBConnector(object):
                         self.secret,
                         self.link)
         return Secret
+
+    def _get_crypto_model(self, base):
+        class Crypto(base):
+            __tablename__ = "cryptos"
+
+            id = Column(Integer, primary_key=True)
+            genre = Column('genre', String(60))
+            content = Column('content', String(60))
+            link = Column('link', String(28))  # Assuming format http://pastebin.com/XXXXXXXX
+      
+            def __repr__(self):
+                return "<Crypto(id=%s, genre='%s', content='%s', link='%s' )" %\
+                       (self.id,
+                        self.genre,
+                        self.content,
+                        self.link
+                       )
+        return Crypto
+
 
 
     def _get_port_model(self, base):
@@ -311,6 +340,26 @@ class PasteDBConnector(object):
                     self.session.rollback()
 
 
+        totalCryptoFindings= 0 
+        for key, value in cryptoRegexes.items():
+            findings = re.findall(value, str(data))
+            
+            for finding in findings:
+                totalCryptoFindings+=1
+                print("\t"+key+": "+finding)
+                crypto_model = self.crypto_model(
+                    genre=key,
+                    content=finding,
+                    link=pasteLink
+                )
+                try:
+                    self.session.add(crypto_model)
+                    self.session.commit()
+                except:
+                    print("Error: Crypto model not committed, session rollback")
+                    self.session.rollback()
+
+
 
                    
         print("IPS: "+str(len(ips)))
@@ -318,6 +367,7 @@ class PasteDBConnector(object):
         print("URLS: "+str(len(urls)))
         print("Phones: "+str(len(phoneNumbers)))
         print("Secrets: "+str(totalSecrets))
+        print("Cryptos: "+str(totalCryptoFindings))
         print("\n\n")
 
     def add(self, paste, data):
