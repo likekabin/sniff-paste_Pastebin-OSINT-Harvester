@@ -22,8 +22,7 @@ Use sniff-paste.py  to go through the entire process of collection, logging, and
 
 This will scrape pastebin for the latest number of pastes, then run analysis for ip addresses, emails, and phone numbers. It filters out duplicates and runs scans on some of the harvested data.
 
-## Database Structure
-
+## Database Structure 
 - `sniff_paste` -- root db
 	- `pastes` -- stores paste with full text, date, link, title, and language
 	- `emails` -- stores emails with extension to paste
@@ -31,3 +30,9 @@ This will scrape pastebin for the latest number of pastes, then run analysis for
 	- `ip` -- stores ip with connectivity and extension to paste
 	- `phones` -- stores phone unmbers with extension to paste
 	- `secrets` -- stores secret type with extension to paste
+        - `ports` -- stores port scan info (port, status, service, version, ip)
+
+
+**Note**
+
+- Please don't use this project maliciously, it is meant to be an analysis tool

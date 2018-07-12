@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import json
 
 import logging
 import socket
@@ -23,10 +24,10 @@ from sqlalchemy import Column, Integer, String, DateTime, Boolean
 from sqlalchemy.dialects.mysql import LONGTEXT
 
 
-debug = True
+debug = False
 
-IPStack = [ ("103.113.92.69",'wxlmno0p'), ("206.190.147.205",'wc3ss3')]
-nm = nmap.PortScanner()
+IPStack = []
+
 secretRegexes = {
     "Slack Token": "(xox[p|b|o|a]-[0-9]{12}-[0-9]{12}-[0-9]{12}-[a-z0-9]{32})",
     "RSA private key": "-----BEGIN RSA PRIVATE KEY-----",
@@ -66,11 +67,11 @@ class PasteDBConnector(object):
         self.ip_model = self._get_ip_model(self.Base)
         self.phone_model = self._get_phone_model(self.Base)
         self.secret_model = self._get_secret_model(self.Base)
-
+        self.port_model = self._get_port_model(self.Base)
         self.Base.metadata.create_all(self.engine)
 
         #Nmap Workers
-        for i in range(5):
+        for i in range(4):
             t = threading.Thread(target=self._scan_network)
             t.setDaemon(True)
             t.start()
@@ -181,6 +182,27 @@ class PasteDBConnector(object):
         return Secret
 
 
+    def _get_port_model(self, base):
+        class Port(base):
+            __tablename__ = "ports"
+
+            id = Column(Integer, primary_key=True)
+            ip = Column('ip', String(60))
+            port = Column('port', String(10))      
+            service = Column('service', String(60))
+            status = Column('status', String(40))
+            version= Column('version', String(60))
+            def __repr__(self):
+                return "<Port(id=%s, ip='%s', port='%s', service='%s', status='%s', version='%s')" %\
+                    (self.id,
+                     self.ip,
+                     self.port,
+                     self.service,
+                     self.status,
+                     self.version
+                    )
+        return Port
+
     def _get_ip_model(self, base):
         class IP(base):
             __tablename__ = "ips"
@@ -222,9 +244,12 @@ class PasteDBConnector(object):
                 url=finding,
                 link=pasteLink
             )
-            self.session.add(url_model)
-            self.session.commit()
-
+            try:
+                self.session.add(url_model)
+                self.session.commit()
+            except:
+                print("Error: Url model not committed, session rollback")
+                self.session.rollback()
             #ADD TO SQL +=url_model
  
         for finding in ips:
@@ -242,8 +267,12 @@ class PasteDBConnector(object):
                 email=finding,
                 link=pasteLink
             )
-            self.session.add(email_model)
-            self.session.commit()           
+            try:
+                self.session.add(email_model)
+                self.session.commit()
+            except:
+                print("Error: Email model not committed, session rollback")
+                self.session.rollback()
 
         for finding in phoneNumbers:
             try:
@@ -252,10 +281,13 @@ class PasteDBConnector(object):
                         phone=finding,
                         link=pasteLink
                     )
+                try:
                     self.session.add(phone_model)
-                    self.session.commit()        
-                else:
-                    print("Invalid Phone Number: ")
+                    self.session.commit()
+                except:
+                    print("Error: Phone model not committed, session rollback")
+                    self.session.rollback()
+
             except:
                print("Error: Phone number submission")  
 
@@ -270,8 +302,14 @@ class PasteDBConnector(object):
                     secret=key,
                     link=pasteLink
                 )
-                self.session.add(secret_model)
-                self.session.commit()
+                try:
+                    self.session.add(secret_model)
+                    self.session.commit()
+                except:
+                    print("Error: Secret model not committed, session rollback")
+                    self.session.rollback()
+
+
 
                    
         print("IPS: "+str(len(ips)))
@@ -304,25 +342,83 @@ class PasteDBConnector(object):
             )
 
     def _scan_network(self):
+        
+        nm = nmap.PortScanner()
+
         while True:
-            if(IPStack):
+
+            if(IPStack): #Check for connectivity, parse nmap if valid
+
                 finding, pasteLink = IPStack.pop()
-                print("NMAP WORKER CALLED")
+                print("NMAP WORKER CALLED ["+finding+"]")
+                print("Left on stack: " +str(len(IPStack)))
                 self.logger.debug('Nmap scan on IP: ' + finding)
-                print('Nmap scan on IP: ' + finding)
-                scan= nm.scan(finding, arguments='-sV')
-                print("Scan Complete")
+                nm.scan(finding, arguments='-sV')
+
+                print("Nmap Scan ["+finding+"] Complete")
                 try:
-                    ip_model = self.ip_model(
-                        ip=finding,
-                        online= True,
-                        link=pasteLink
-                     )
-                    self.session.add(ip_model)
-                    self.session.commit()
-                except Exception as e:
-                    print("Error pushing to mysql: "+ str(e))
- 
+                    state= nm[finding]['status']['state']
+                except:
+                    state= "down"
+
+                if("up" in state ):
+                    portScan= nm[finding]['tcp']
+
+                    self.logger.debug(finding+": up\tports: "+str(portScan))
+                    
+                    for key, value in portScan.items():
+                        print(finding+":"+str(key))
+                        product= value['product']
+                        ver= value['version']
+                        state= value['state']
+                        name= value['name']
+                        try:
+                         
+                            print("Name: "+name+"\n\tProduct: "+product+"\n\tVersion: "+ver+"\n\tState: "+state)
+                            port_model = self.port_model(
+                                ip = finding,
+                                port = key,
+                                service = product,
+                                status = state,
+                                version = ver,
+                            )
+                            try:
+                                self.session.add(port_model)
+                                self.session.commit()
+                            except:
+                                self.session.rollback()
+                                print("Error: Port Commit Issue, session rollback")
+                        except Exception as e:
+                            print("Exception error while pushing port model: "+str(e))
+
+                    try:
+                        ip_model = self.ip_model(
+                            ip=finding,
+                            online= True,
+                            link=pasteLink
+                         )
+                       # self.session.add(ip_model)
+                       # self.session.commit()
+                    except Exception as e:
+                        print("Error pushing to mysql: "+ str(e))
+
+                else: #Else put a normal entry in for pastebin
+                     self.logger.debug("IP["+finding+"] down")
+                     try:
+                        ip_model = self.ip_model(
+                            ip=finding,
+                            online= False,
+                            link=pasteLink
+                         )
+                        try:
+                            self.session.add(ip_model)
+                            self.session.commit()
+                        except:
+                            self.session.rollback()
+                            print("Error: IP Commit Issue, session rollback")
+
+                     except Exception as e:
+                        print("Error pushing to mysql: "+ str(e))                    
 
 class PastebinScraper(object):
     def __init__(self):
@@ -390,7 +486,7 @@ class PastebinScraper(object):
         pb_link = self.conf_general['PBLINK']
         paste_counter = 0
         self.logger.info('No scrape limit set - scraping indefinitely' if self.unlimited_pastes
-                         else 'Paste limit: ' + str(paste_limit))
+                        else 'Paste limit: ' + str(paste_limit))
 
         while self.unlimited_pastes or (paste_counter < paste_limit):
             page = self._handle_data_download(pb_link)
@@ -496,7 +592,6 @@ class PastebinScraper(object):
             t = threading.Thread(target=self._download_paste)
             t.setDaemon(True)
             t.start()
-        
 
         s = threading.Thread(target=self._get_paste_data)
         s.start()
