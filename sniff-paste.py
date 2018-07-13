@@ -51,7 +51,15 @@ cryptoRegexes={
     "bitcoin-xpub-key" : "(xpub[a-km-zA-HJ-NP-Z1-9]{100,108})(\\?c=\\d*&h=bip\\d{2,3})?" ,
     "testnet-address" : "[mn2][a-km-zA-HJ-NP-Z1-9]{25,34}" ,
     "testnet-tpub-key": "(tpub[a-km-zA-HJ-NP-Z1-9]{100,108})(\\?c=\\d*&h=bip\\d{2,3})?" ,
-    "testnet-uri" : "bitcoin:([mn2][a-km-zA-HJ-NP-Z1-9]{25,34})"
+    "testnet-uri" : "bitcoin:([mn2][a-km-zA-HJ-NP-Z1-9]{25,34})",
+    "monero-address": "(?:^4[0-9AB][1-9A-HJ-NP-Za-km-z]{93}$)",
+    "ethereum-address": "(?:^0x[a-fA-F0-9]{40}$)",
+    "litecoin-address":"(?:^[LM3][a-km-zA-HJ-NP-Z1-9]{26,33}$)",
+    "bitcoin-cash-address":"(?:^[13][a-km-zA-HJ-NP-Z1-9]{33}$)",
+    "dash-address":"(?:^X[1-9A-HJ-NP-Za-km-z]{33}$)",
+    "ripple-address":"(?:^r[0-9a-zA-Z]{33}$)",
+    "neo-address":"(?:^A[0-9a-zA-Z]{33}$)",
+    "dogecoin-address":"(?:^D{1}[5-9A-HJ-NP-U]{1}[1-9A-HJ-NP-Za-km-z]{32}$)"
 }
 
 class PasteDBConnector(object):
