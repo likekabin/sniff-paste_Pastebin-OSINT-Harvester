@@ -32,10 +32,11 @@ This will scrape pastebin for the latest number of pastes, then run analysis for
 	- `secrets` -- stores secret type with extension to paste
 	- `ports` -- stores port scan info (port, status, service, version, ip)
 	- `cryptos` -- stores cryptocurrency findings with extension to paste 
+
 **Crypto findings are not certain to be valid, consider them low probability findings**
 
 
-**Note**
+## Notes
 
 - Please contribute! If there's an error let me know -- even better if you can fix it :)
 	- Regex Contributions would be very helpful, and should be pretty easy to add!
